@@ -1,0 +1,22 @@
+{
+  "name": "ally",
+  "version": "1.0.0",
+  "description": "Ally token and bonding contract",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ichifarm/ally.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ichifarm/ally/issues"
+  },
+  "homepage": "https://github.com/ichifarm/ally#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.4.1-solc-0.7-2"
+  }
+}
