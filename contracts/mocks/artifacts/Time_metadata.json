@@ -1,0 +1,59 @@
+{
+	"compiler": {
+		"version": "0.7.6+commit.7338295f"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"name": "blockTime",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "time",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/mocks/Time.sol": "Time"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/mocks/Time.sol": {
+			"keccak256": "0x3f67a31f4620bc303a277cb735f4539353b30460e8c5ec6d88732bb606997726",
+			"license": "BUSL-1.1",
+			"urls": [
+				"bzz-raw://20dd087827cd00accafe9e5184a289e5529f2115e9c0b09e8ff0b25840494ea3",
+				"dweb:/ipfs/QmW9if7iR66ksViU9KyZcsWdjWpfxcP2BkEnZFbxufC5KU"
+			]
+		}
+	},
+	"version": 1
+}

@@ -3,11 +3,14 @@
 pragma solidity 0.7.6;
 
 import "./IAlly.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract AllyBond {
+contract AllyBond is Ownable {
 
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     IERC20 ichiV2;
     IAlly ally;
@@ -20,15 +23,13 @@ contract AllyBond {
 
     event Deployed(IERC20 ichiV2, IAlly ally, uint256 commencement, uint256 durationDays);
     event ClaimIchi(address user, address to, uint256 ally, uint256 ichi);
+    event EmergencyWithdrawal(IERC20 token, uint256 amount, address to);
 
     /// @notice following the airdrop, the deployer is required to burn any surplus Ally
     /// (because totalSupply() is used in calculations) and send ICHI V2 to the contract.
-    /// ICHI V2 cannot be retrieved from this contract except by redeeming Ally. There is no 
-    /// provision for lost Ally and ICHI V2 will be effectively removed from circulation in
-    /// that case, i.e. marooned. 
 
     constructor(IERC20 ichiV2_, IAlly ally_, uint256 commencement_, uint256 durationDays_) {
-        require(commencement_ >= block.timestamp, 'AllyBond.constructor:: commencement_ cannot be in the past');
+        require(commencement_ >= block.timestamp, 'AllyBond:constructor:: commencement_ cannot be in the past');
         ichiV2 = ichiV2_;
         ally = ally_;
         commencement = commencement_;
@@ -36,9 +37,11 @@ contract AllyBond {
         emit Deployed(ichiV2_, ally_, commencement_, durationDays_);
     }
 
+    // redeem ichi from this contract by redeeming Ally. Ally is burned.
+
     function claimIchi(uint256 amountAlly, address to) external returns(uint256 amountIchi) {
-        require(amountAlly <= ally.balanceOf(msg.sender), 'AllyBond.claimIchi:: insufficient ally balance');
-        require(amountAlly <= ally.allowance(msg.sender, address(this)), 'AllyBond.claimIchi:: insufficent allowance');
+        require(amountAlly <= ally.balanceOf(msg.sender), 'AllyBond:claimIchi:: insufficient Ally balance');
+        require(amountAlly <= ally.allowance(msg.sender, address(this)), 'AllyBond:claimIchi:: insufficent Ally allowance');
         ally.transferFrom(msg.sender, address(this), amountAlly);
         ally.burn(amountAlly);
         amountIchi = ichiForAlly(amountAlly);
@@ -46,13 +49,21 @@ contract AllyBond {
         emit ClaimIchi(msg.sender, to, amountAlly, amountIchi);
     }
 
-    function ichiBalance() public view returns(uint256 ichiOnHand) {
-        ichiOnHand = ichiV2.balanceOf(address(this));
+    // owner may withdraw liquidity from this contract to recover errant tokens or cause an emergency stop.
+
+    function emergencyWithdraw(IERC20 token, uint256 amount, address to) external onlyOwner {
+        require(to != address(0), "AllyBond:emergencyWithdraw:: to cannot be the 0x0 address");
+        token.safeTransfer(to, amount);
+        emit EmergencyWithdrawal(token, amount, to);
     }
+
+    // duration days is complete
 
     function complete() public view returns(bool isComplete) {
         isComplete = daysOld() >= durationDays;
     }
+
+    // 24-hour periods completed in full
 
     function daysOld() public view returns(uint256 elapsed) {
         if(block.timestamp <= commencement) return 0;
@@ -66,13 +77,23 @@ contract AllyBond {
         p18 = daysOld().mul(PRECISION).div(durationDays);
     }
 
+    // at completion, based on current ICHI balance and unredeemed Ally token supply
+
     function ichiPerAlly() public view returns(uint256 p18) {
         uint circulatingAlly = ally.totalSupply();
         p18 = ichiBalance().mul(PRECISION).div(circulatingAlly);
     }
 
+    // present value, based on ally to redeem, value at completion and redeemable percent
+
     function ichiForAlly(uint256 amountAlly) public view returns(uint256 amountIchi) {
-        amountIchi = amountAlly.mul(ichiPerAlly()).div(PRECISION);
+        amountIchi = amountAlly.mul(ichiPerAlly()).mul(redeemablePercent()).div(PRECISION).div(PRECISION);
+    }
+
+    // courtesy view functions
+
+    function ichiBalance() public view returns(uint256 ichiOnHand) {
+        ichiOnHand = ichiV2.balanceOf(address(this));
     }
 
     function userBalances(address user) public view returns(uint256 allyBalance, uint256 claimable, uint256 uponCompletion) {
