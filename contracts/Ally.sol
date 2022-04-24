@@ -35,7 +35,7 @@ contract Ally is ERC20Burnable, Ownable {
     constructor(IERC20 ichiV2_, uint256 commencement_, uint256 durationDays_)
         ERC20(NAME_, SYMBOL_) 
     {
-        require(commencement_ >= block.timestamp, 'AllyBond:constructor:: commencement_ cannot be in the past');
+        require(commencement_ >= block.timestamp, 'Ally:constructor:: commencement_ cannot be in the past');
         ichiV2 = ichiV2_;
         commencement = commencement_;
         durationDays = durationDays_;
@@ -46,8 +46,8 @@ contract Ally is ERC20Burnable, Ownable {
     // redeem ichi from this contract by burning Ally
 
     function claimIchi(uint256 amountAlly, address to) external returns(uint256 amountIchi) {
-        require(amountAlly <= balanceOf(msg.sender), 'AllyBond:claimIchi:: insufficient Ally balance');
-        require(amountAlly <= allowance(msg.sender, address(this)), 'AllyBond:claimIchi:: insufficent Ally allowance');
+        require(amountAlly <= balanceOf(msg.sender), 'Ally:claimIchi:: insufficient Ally balance');
+        require(amountAlly <= allowance(msg.sender, address(this)), 'Ally:claimIchi:: insufficent Ally allowance');
         _burn(msg.sender, amountAlly);
         amountIchi = ichiForAlly(amountAlly);
         ichiV2.transfer(to, amountIchi);
@@ -57,7 +57,7 @@ contract Ally is ERC20Burnable, Ownable {
     // owner may withdraw liquidity from this contract to recover errant tokens or cause an emergency stop.
 
     function emergencyWithdraw(IERC20 token, uint256 amount, address to) external onlyOwner {
-        require(to != address(0), "AllyBond:emergencyWithdraw:: to cannot be the 0x0 address");
+        require(to != address(0), "Ally:emergencyWithdraw:: to cannot be the 0x0 address");
         token.safeTransfer(to, amount);
         emit EmergencyWithdrawal(token, amount, to);
     }
