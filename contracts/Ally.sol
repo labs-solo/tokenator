@@ -23,7 +23,7 @@ contract Ally is ERC20Burnable, Ownable {
     // start time and duration are unchangeable
 
     uint256 public immutable commencement;
-    uint256 public immutable durationDays;
+    uint256 public immutable durationSeconds;
 
     event Deployed(address deployer, IERC20 ichiV2, uint256 commencement, uint256 durationDays);
     event ClaimIchi(address user, address to, uint256 ally, uint256 ichi);
@@ -38,7 +38,7 @@ contract Ally is ERC20Burnable, Ownable {
         require(commencement_ >= block.timestamp, 'Ally:constructor:: commencement_ cannot be in the past');
         ichiV2 = ichiV2_;
         commencement = commencement_;
-        durationDays = durationDays_;
+        durationSeconds = durationDays_.mul(1 days);
         _mint(msg.sender, INITIAL_SUPPLY_);
         emit Deployed(msg.sender, ichiV2_, commencement_, durationDays_);
     }
@@ -65,21 +65,21 @@ contract Ally is ERC20Burnable, Ownable {
     // duration days is complete
 
     function complete() public view returns(bool isComplete) {
-        isComplete = daysOld() >= durationDays;
+        isComplete = ageSeconds() >= durationSeconds;
     }
 
     // 24-hour periods completed in full
 
-    function daysOld() public view returns(uint256 elapsed) {
+    function ageSeconds() public view returns(uint256 elapsedSeconds) {
         if(block.timestamp <= commencement) return 0;
-        elapsed = block.timestamp.sub(commencement).div(1 days);
+        elapsedSeconds = block.timestamp.sub(commencement);
     }
 
     // 1e18 = 1.00 = 100%
 
     function redeemablePercent() public view returns(uint256 p18) {
         if(complete()) return PRECISION;
-        p18 = daysOld().mul(PRECISION).div(durationDays);
+        p18 = ageSeconds().mul(PRECISION).div(durationSeconds);
     }
 
     // at completion, based on current ICHI balance and unredeemed Ally token supply
