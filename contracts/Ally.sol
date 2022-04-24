@@ -83,6 +83,7 @@ contract Ally is ERC20Burnable, Ownable {
     }
 
     // at completion, based on current ICHI balance and unredeemed Ally token supply
+    // it is permissible to send more ICHI to this contract for proportional, time-based distribution
 
     function ichiPerAlly() public view returns(uint256 p18) {
         uint circulatingAlly = totalSupply();
