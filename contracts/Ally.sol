@@ -13,7 +13,7 @@ contract Ally is ERC20Burnable, Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IERC20 ichiV2;
+    IERC20 ichi;
 
     string private constant NAME_ = "ICHI Ally";
     string private constant SYMBOL_ = "ALLY";
@@ -25,32 +25,34 @@ contract Ally is ERC20Burnable, Ownable {
     uint256 public immutable commencement;
     uint256 public immutable durationSeconds;
 
-    event Deployed(address deployer, IERC20 ichiV2, uint256 commencement, uint256 durationDays);
+    event Deployed(address deployer, IERC20 ichi, uint256 commencement, uint256 durationDays);
     event ClaimIchi(address user, address to, uint256 ally, uint256 ichi);
     event EmergencyWithdrawal(IERC20 token, uint256 amount, address to);
 
     /// @notice following the airdrop, the deployer is required to burn any surplus Ally
-    /// (because totalSupply() is used in calculations) and send ICHI V2 to the contract.
+    /// (because totalSupply() is used in calculations) and send ICHI to the contract.
 
-    constructor(IERC20 ichiV2_, uint256 commencement_, uint256 durationDays_)
+    constructor(IERC20 ichi_, uint256 commencement_, uint256 durationDays_)
         ERC20(NAME_, SYMBOL_) 
     {
         require(commencement_ >= block.timestamp, 'Ally:constructor:: commencement_ cannot be in the past');
-        ichiV2 = ichiV2_;
+        ichi = ichi_;
         commencement = commencement_;
         durationSeconds = durationDays_.mul(1 days);
         _mint(msg.sender, INITIAL_SUPPLY_);
-        emit Deployed(msg.sender, ichiV2_, commencement_, durationDays_);
+        emit Deployed(msg.sender, ichi_, commencement_, durationDays_);
     }
 
     // redeem ichi from this contract by burning Ally
 
     function claimIchi(uint256 amountAlly, address to) external returns(uint256 amountIchi) {
+        require(commencement < block.timestamp, 'Ally:claimIchi:: must wait for the commencement date to pass');
+        require(to != address(0), "Ally:claimIchi:: to cannot be the 0x0 address");
         require(amountAlly <= balanceOf(msg.sender), 'Ally:claimIchi:: insufficient Ally balance');
         require(amountAlly <= allowance(msg.sender, address(this)), 'Ally:claimIchi:: insufficent Ally allowance');
-        _burn(msg.sender, amountAlly);
         amountIchi = ichiForAlly(amountAlly);
-        ichiV2.transfer(to, amountIchi);
+        _burn(msg.sender, amountAlly);
+        ichi.transfer(to, amountIchi);
         emit ClaimIchi(msg.sender, to, amountAlly, amountIchi);
     }
 
@@ -99,7 +101,7 @@ contract Ally is ERC20Burnable, Ownable {
     // courtesy view functions
 
     function ichiBalance() public view returns(uint256 ichiOnHand) {
-        ichiOnHand = ichiV2.balanceOf(address(this));
+        ichiOnHand = ichi.balanceOf(address(this));
     }
 
     function userBalances(address user) public view returns(uint256 allyBalance, uint256 claimable, uint256 uponCompletion) {
