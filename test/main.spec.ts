@@ -15,9 +15,7 @@ const TEN_MIL = "10000000000000000000000000";
 const ONE_MIL = "1000000000000000000000000";
 const _8_MIL = "8000000000000000000000000";
 const HALF_MIL = "500000000000000000000000";
-const _200K = "200000000000000000000000";
 const FIVE_PER_100 = "50000000000000000";
-const _2_96 = "79228162514264337593543950336";
 
 const createFixtureLoader = waffle.createFixtureLoader
 
@@ -91,7 +89,6 @@ describe('Ally - main', () => {
     // try to claim
     const msg1 = "Ally:claimIchi:: must wait for the commencement date to pass";
     await expect(ally.connect(other0).claimIchi(ONE_MIL, other0.address)).to.be.revertedWith(msg1);
-
   })
 
   it('after commencement', async () => {
@@ -104,12 +101,10 @@ describe('Ally - main', () => {
     expect((await ally.balanceOf(other2.address)).toString()).to.eq(ONE_MIL)
     expect((await ichi.balanceOf(ally.address)).toString()).to.eq(HALF_MIL)
 
-    await mineBlock(provider, now + 2 * 60 * 60) // 1 hour after commencement
+    await mineBlock(provider, now + 2 * 60 * 60) // 2 hours after commencement
 
     let comm_tm = Number(await ally.commencement())
-    //console.log(comm_tm)
     const { timestamp: curr_tm } = await provider.getBlock('latest')
-    //console.log(curr_tm)
 
     expect((await ally.complete()).toString()).to.eq("false")
     let secs = Number((await ally.ageSeconds()).toString())
@@ -141,29 +136,17 @@ describe('Ally - main', () => {
     let ichiBal = (await ichi.balanceOf(other0.address)).toString()
     await expect(ichiBal).to.be.eq("0")    
 
-    // redPercent = (await ally.redeemablePercent()).toString()
-    // console.log("redeemable percent before claim = "+redPercent)
-
     let ichiForAlly = (await ally.ichiForAlly(HALF_MIL)).toString()
-    // console.log("ichiForAlly before claim = "+ichiForAlly)
 
     // use ichiPerAlly before claimIchi with redeemPercent at the block of claimIchi to get estimated number
     let ichiPerAlly = (await ally.ichiPerAlly()).toString()
-    // console.log("ichiPerAlly before claim = "+ichiPerAlly)
     await ally.connect(other0).claimIchi(HALF_MIL, other0.address);
     redPercent = (await ally.redeemablePercent()).toString()
     
     ichiForAlly = (await ally.ichiForAlly(HALF_MIL)).toString()
-    // console.log("ichiForAlly after claim = "+ichiForAlly)
 
     ichiBal = (await ichi.balanceOf(other0.address)).toString()    
-    // console.log("ICHI end balance = "+ichiBal)
-
-    //console.log("ICHI estmated balance = "+BigNumber.from(HALF_MIL).
-    //  mul(BigNumber.from(redPercent)).
-    //  mul(BigNumber.from(ichiPerAlly)).
-    //  div(BigNumber.from(10).pow(36)).toString())
-
+ 
     await expect(ichiBal).to.be.eq(BigNumber.from(HALF_MIL).
       mul(BigNumber.from(redPercent)).
       mul(BigNumber.from(ichiPerAlly)).
@@ -199,7 +182,6 @@ describe('Ally - main', () => {
       mul(BigNumber.from(redPercent)).
       mul(BigNumber.from(ichiPerAlly)).
       div(BigNumber.from(10).pow(36)).toString())
-  
   })
 
   it('after completion', async () => {
@@ -268,7 +250,6 @@ describe('Ally - main', () => {
 
     let ichiBal_ally = (await ichi.balanceOf(ally.address)).toString()
     await expect(BigNumber.from(ichiBal_ally)).to.be.eq(BigNumber.from(0))
-
   })
 
   it('emergency withdraw', async () => {
@@ -279,7 +260,7 @@ describe('Ally - main', () => {
     expect((await ally.balanceOf(other0.address)).toString()).to.eq(ONE_MIL)
     expect((await ichi.balanceOf(ally.address)).toString()).to.eq(HALF_MIL)
 
-    await mineBlock(provider, now + 2 * 60 * 60) // 1 hour after commencement
+    await mineBlock(provider, now + 2 * 60 * 60) // 2 hours after commencement
 
     // get all ICHIs out
     const msg1 = "Ally:emergencyWithdraw:: to cannot be the 0x0 address";
@@ -302,8 +283,5 @@ describe('Ally - main', () => {
     expect(allyBalance.toString()).to.eq(ONE_MIL)
     expect(claimable.toString()).to.eq("0")
     expect(uponCompletion.toString()).to.eq("0")
-
   })
-
-
 })
