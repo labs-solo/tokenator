@@ -101,7 +101,7 @@ describe('Ally - main', () => {
     expect((await ally.balanceOf(other2.address)).toString()).to.eq(ONE_MIL)
     expect((await ichi.balanceOf(ally.address)).toString()).to.eq(HALF_MIL)
 
-    await mineBlock(provider, now + 2 * 60 * 60) // 2 hours after commencement
+    await mineBlock(provider, now + 2 * 60 * 60) // 1 hour after commencement
 
     let comm_tm = Number(await ally.commencement())
     const { timestamp: curr_tm } = await provider.getBlock('latest')
@@ -260,7 +260,7 @@ describe('Ally - main', () => {
     expect((await ally.balanceOf(other0.address)).toString()).to.eq(ONE_MIL)
     expect((await ichi.balanceOf(ally.address)).toString()).to.eq(HALF_MIL)
 
-    await mineBlock(provider, now + 2 * 60 * 60) // 2 hours after commencement
+    await mineBlock(provider, now + 2 * 60 * 60) // 1 hour after commencement
 
     // get all ICHIs out
     const msg1 = "Ally:emergencyWithdraw:: to cannot be the 0x0 address";
