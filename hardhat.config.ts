@@ -24,7 +24,7 @@ export default {
       live: false,
       saveDeployments: true,
       allowUnlimitedContractSize: false,
-      tags: ["test", "local", "ethereum", "polygon"],
+      tags: ["test", "local", "ethereum", "polygon", "kovan"],
       accounts: {
         mnemonic,
       },
@@ -37,6 +37,12 @@ export default {
       //url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.MAINNET_ALCHEMY_API_KEY}`,
       //accounts: [`0x${process.env.ICHI_LAUNCH}`],
       chainId: 1,
+      saveDeployments: true,
+    },
+    kovan: {
+      url: "https://kovan.infura.io/v3/" + process.env.INFURA_ID,
+      accounts: [`0x${process.env.ALLY_DEPLOYER_KOVAN}`],
+      chainId: 42,
       saveDeployments: true,
     },
   },
@@ -66,6 +72,7 @@ export default {
   etherscan: {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY,
+      kovan: process.env.ETHERSCAN_API_KEY,
     }
   },
   mocha: {

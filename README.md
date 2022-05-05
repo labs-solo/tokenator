@@ -1,2 +1,2 @@
 # ally
-Ally token and bonding contract
+Ally token contract

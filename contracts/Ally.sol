@@ -64,13 +64,13 @@ contract Ally is ERC20Burnable, Ownable {
         emit EmergencyWithdrawal(token, amount, to);
     }
 
-    // duration days is complete
+    // duration period is complete
 
     function complete() public view returns(bool isComplete) {
         isComplete = ageSeconds() >= durationSeconds;
     }
 
-    // 24-hour periods completed in full
+    // seconds completed in full
 
     function ageSeconds() public view returns(uint256 elapsedSeconds) {
         if(block.timestamp <= commencement) return 0;

@@ -1,10 +1,14 @@
 {
   "name": "ally",
   "version": "1.0.0",
-  "description": "Ally token and bonding contract",
+  "description": "Ally token contract",
   "main": "index.js",
   "scripts": {
     "compile": "waffle",
+    "deploy:mainnet": "hardhat deploy --network mainnet --tags ethereum",
+    "verify:mainnet": "hardhat etherscan-verify --network mainnet",
+    "deploy:kovan": "hardhat deploy --network kovan --tags kovan",
+    "verify:kovan": "hardhat etherscan-verify --network kovan",
     "test": "mocha",
     "test:main": "bash ./scripts/test-main.sh"
   },
