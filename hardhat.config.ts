@@ -31,9 +31,10 @@ export default {
     },
     mainnet: {
       url: "https://mainnet.infura.io/v3/" + process.env.INFURA_ID,
-      accounts: {
+      accounts: [`0x${process.env.ALLY_DEPLOYER_MAINNET}`],
+      /*accounts: {
         mnemonic,
-      },
+      },*/
       //url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.MAINNET_ALCHEMY_API_KEY}`,
       //accounts: [`0x${process.env.ICHI_LAUNCH}`],
       chainId: 1,
