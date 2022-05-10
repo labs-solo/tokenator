@@ -10,7 +10,8 @@
     "deploy:kovan": "hardhat deploy --network kovan --tags kovan",
     "verify:kovan": "hardhat etherscan-verify --network kovan",
     "test": "mocha",
-    "test:main": "bash ./scripts/test-main.sh"
+    "test:main": "bash ./scripts/test-main.sh",
+    "test:swap": "bash ./scripts/test-swap.sh"
   },
   "repository": {
     "type": "git",

@@ -108,7 +108,7 @@ describe('Ally - main', () => {
 
     expect((await ally.complete()).toString()).to.eq("false")
     let secs = Number((await ally.ageSeconds()).toString())
-    expect(secs).to.lte(3605)
+    expect(secs).to.lte(3606)
     expect((await ally.redeemablePercent()).toString()).to.eq(BigNumber.from(10).pow(18).mul(secs).div(1095*24*60*60))
     expect((await ally.ichiPerAlly()).toString()).to.eq(FIVE_PER_100)
     let redPercent = (await ally.redeemablePercent()).toString()
