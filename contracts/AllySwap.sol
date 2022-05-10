@@ -32,11 +32,13 @@ contract AllySwap is Ownable {
     event SwapForAlly(address token, address to, uint256 amountToken, uint256 amountAlly);
     event ChangeSwapRate(address token, uint256 oldRate, uint256 newRate);
     event AgreedToTerms(address token, address account, bytes32 terms);
+    event Deployed(address deployer, address oneToken, address allyToken, uint256 swapRate);
 
     constructor(address oneToken_, address allyToken_, uint256 swapRate_) {
         oneToken = oneToken_;
         allyToken = allyToken_;
         swapRate = swapRate_;
+        emit Deployed(msg.sender, oneToken_, allyToken_, swapRate_);
     }
 
     function termsHash(address account) public pure returns (bytes32) {
@@ -55,8 +57,8 @@ contract AllySwap is Ownable {
 
     function emergencyWithdraw(address _token, uint256 amount, address to) external onlyOwner {
         require(to != address(0), "AllySwap: to cannot be the 0x0 address");
-        IERC20(_token).safeTransfer(to, amount);
         emit EmergencyWithdrawal(_token, amount, to);
+        IERC20(_token).safeTransfer(to, amount);
     }
 
     function consentAndAgreeToTerms(bytes32 terms) external {
@@ -77,9 +79,9 @@ contract AllySwap is Ownable {
         uint256 amountOut = amountIn.mul(PRECISION).div(swapRate);
         require(amountOut <= IERC20(allyToken).balanceOf(address(this)), 'AllySwap: insufficient Ally balance');
 
+        emit SwapForAlly(oneToken, to, amountIn, amountOut);
+
         IERC20(oneToken).transferFrom(msg.sender, address(this), amountIn);
         IERC20(allyToken).transfer(to, amountOut);
-
-        emit SwapForAlly(oneToken, to, amountIn, amountOut);
     }
 }
