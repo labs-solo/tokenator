@@ -47,11 +47,6 @@ contract AllySwap is Ownable {
         return approvedTerms[account];
     }
 
-    // temporary function, to be removed!
-    function reset(address account) external {
-        approvedTerms[account] = false;
-    }
-
     function _setApproved(address account) private {
         approvedTerms[account] = true;
     }
