@@ -7,6 +7,7 @@ import { Ally, ICHIV2, OneToken, AllySwap } from "../typechain/";
 
 chai.use(solidity)
 
+
 interface AllyFixture {
   ally: Ally
   ichi: ICHIV2
