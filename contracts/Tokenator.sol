@@ -9,8 +9,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract Tokenator is ERC20Burnable, Ownable {
     using SafeERC20 for IERC20;
 
-    IERC20 liquidityToken;
-    uint256 private constant INITIAL_SUPPLY_ = 1_000_0000 * 1e18;
+    IERC20 underlyingToken;
     uint256 private constant PRECISION = 1e18;
     uint256 public immutable commencement;
     uint256 public immutable durationSeconds;
@@ -18,88 +17,86 @@ contract Tokenator is ERC20Burnable, Ownable {
     error ZeroAddress();
     error CommencementPassed();
     error CommencementNotPassed();
-    error CannotRescueLiquidityToken();
+    error CannotRescueUnderlyingToken();
 
     event Deployed(
         address deployer,
-        IERC20 liquidityToken,
+        IERC20 underlyingToken,
         uint256 commencement,
         uint256 durationDays
     );
-    event ClaimLiquidityToken(
-        address user,
-        address to,
+    event ClaimUnderlyingToken(
+        address indexed user,
+        address indexed to,
         uint256 tokenatorAmount,
-        uint256 liquidityTokenAmount
+        uint256 underlyingTokenAmount
     );
-    event EmergencyWithdrawal(uint256 amount, address to);
-    event TokensRescued(IERC20 token, uint256 amount, address to);
+    event EmergencyWithdrawal(uint256 amount, address indexed to);
+    event TokensRescued(IERC20 token, uint256 amount, address indexed to);
 
     /// @notice following the airdrop, the deployer is required to burn any surplus Tokenator
-    /// (because totalSupply() is used in calculations) and send liquidity token to the contract.
+    /// (because totalSupply() is used in calculations) and send underlying token to the contract.
     constructor(
         string memory name_,
         string memory symbol_,
-        IERC20 liquidityToken_,
+        uint256 totalSupply_,
+        IERC20 underlyingToken_,
         uint256 commencement_,
         uint256 durationDays_
     ) ERC20(name_, symbol_) Ownable(msg.sender) {
         if (commencement_ < block.timestamp) revert CommencementPassed();
 
-        liquidityToken = liquidityToken_;
+        underlyingToken = underlyingToken_;
         commencement = commencement_;
         durationSeconds = durationDays_ * 1 days;
 
-        _mint(msg.sender, INITIAL_SUPPLY_);
+        _mint(msg.sender, totalSupply_);
 
         emit Deployed(
             msg.sender,
-            liquidityToken_,
+            underlyingToken_,
             commencement_,
             durationDays_
         );
     }
 
-    // redeem liquidity token from this contract by burning tokenator
-    function claimLiquidityToken(
+    // redeem underlying token from this contract by burning tokenator
+    function claimUnderlyingToken(
         uint256 tokenatorAmount,
         address to
-    ) external returns (uint256 liquidityTokenAmount) {
+    ) external returns (uint256 underlyingTokenAmount) {
         if (commencement >= block.timestamp) revert CommencementNotPassed();
         if (to == address(0)) revert ZeroAddress();
 
-        liquidityTokenAmount = liquidityTokenForTokenator(tokenatorAmount);
+        underlyingTokenAmount = underlyingTokenForTokenator(tokenatorAmount);
         _burn(msg.sender, tokenatorAmount);
-        liquidityToken.transfer(to, liquidityTokenAmount);
+        underlyingToken.transfer(to, underlyingTokenAmount);
 
-        emit ClaimLiquidityToken(
+        emit ClaimUnderlyingToken(
             msg.sender,
             to,
             tokenatorAmount,
-            liquidityTokenAmount
+            underlyingTokenAmount
         );
     }
 
-    // owner may withdraw liquidity token in emergency situations
-    function emergencyWithdraw(
-        uint256 amount,
-        address to
-    ) external onlyOwner {
+    // owner may withdraw underlying token in emergency situations
+    function emergencyWithdraw(uint256 amount, address to) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
 
-        liquidityToken.safeTransfer(to, amount);
+        underlyingToken.safeTransfer(to, amount);
 
         emit EmergencyWithdrawal(amount, to);
     }
 
-    // owner may withdraw tokens accidentally sent to the contract that aren't the liquidity token 
+    // owner may withdraw tokens accidentally sent to the contract that aren't the underlying token
     function rescueTokens(
         IERC20 token,
         uint256 amount,
         address to
     ) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
-        if (token == liquidityToken) revert CannotRescueLiquidityToken();
+        if (token == underlyingToken) revert CannotRescueUnderlyingToken();
 
         token.safeTransfer(to, amount);
 
@@ -123,30 +120,30 @@ contract Tokenator is ERC20Burnable, Ownable {
         p18 = (ageSeconds() * PRECISION) / durationSeconds;
     }
 
-    // at completion, based on current liquidity token balance and unredeemed tokenator token supply
-    // it is permissible to send more liquidity token to this contract for proportional, time-based distribution
-    function liquidityTokenPerTokenator() public view returns (uint256 p18) {
-        p18 = (liquidityTokenBalance() * PRECISION) / totalSupply();
+    // at completion, based on current underlying token balance and unredeemed tokenator token supply
+    // it is permissible to send more underlying token to this contract for proportional, time-based distribution
+    function underlyingTokenPerTokenator() public view returns (uint256 p18) {
+        p18 = (underlyingTokenBalance() * PRECISION) / totalSupply();
     }
 
     // present value, based on tokenator to redeem, value at completion and redeemable percent
-    function liquidityTokenForTokenator(
+    function underlyingTokenForTokenator(
         uint256 tokenatorAmount
-    ) public view returns (uint256 liquidityTokenAmount) {
-        liquidityTokenAmount =
+    ) public view returns (uint256 underlyingTokenAmount) {
+        underlyingTokenAmount =
             (tokenatorAmount *
-                liquidityTokenPerTokenator() *
+                underlyingTokenPerTokenator() *
                 redeemablePercent()) /
             PRECISION ** 2;
     }
 
     // courtesy view functions
-    function liquidityTokenBalance()
+    function underlyingTokenBalance()
         public
         view
-        returns (uint256 liquidityTokenBalance_)
+        returns (uint256 underlyingTokenBalance_)
     {
-        liquidityTokenBalance_ = liquidityToken.balanceOf(address(this));
+        underlyingTokenBalance_ = underlyingToken.balanceOf(address(this));
     }
 
     function userBalances(
@@ -162,7 +159,7 @@ contract Tokenator is ERC20Burnable, Ownable {
     {
         tokenatorBalance = balanceOf(user);
         uponCompletion =
-            (tokenatorBalance * liquidityTokenPerTokenator()) /
+            (tokenatorBalance * underlyingTokenPerTokenator()) /
             PRECISION;
         claimable = (uponCompletion * redeemablePercent()) / PRECISION;
     }
