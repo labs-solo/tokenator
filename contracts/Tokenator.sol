@@ -70,7 +70,7 @@ contract Tokenator is ERC20Burnable, Ownable {
 
         underlyingTokenAmount = underlyingTokenForTokenator(tokenatorAmount);
         _burn(msg.sender, tokenatorAmount);
-        underlyingToken.transfer(to, underlyingTokenAmount);
+        underlyingToken.safeTransfer(to, underlyingTokenAmount);
 
         emit ClaimUnderlyingToken(
             msg.sender,
