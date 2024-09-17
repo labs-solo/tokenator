@@ -9,7 +9,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract Tokenator is ERC20Burnable, Ownable {
     using SafeERC20 for IERC20;
 
-    IERC20 underlyingToken;
+    IERC20 public underlyingToken;
     uint256 private constant PRECISION = 1e18;
     uint256 public immutable commencement;
     uint256 public immutable durationSeconds;
