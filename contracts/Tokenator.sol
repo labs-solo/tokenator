@@ -31,8 +31,8 @@ contract Tokenator is ERC20Burnable, Ownable {
         uint256 tokenatorAmount,
         uint256 underlyingTokenAmount
     );
-    event EmergencyWithdrawal(uint256 amount, address indexed to);
-    event TokensRescued(IERC20 token, uint256 amount, address indexed to);
+    event EmergencyWithdrawal(address indexed caller, uint256 amount, address indexed to);
+    event TokensRescued(address indexed caller, IERC20 token, uint256 amount, address indexed to);
 
     /// @notice following the airdrop, the deployer is required to burn any surplus Tokenator
     /// (because totalSupply() is used in calculations) and send underlying token to the contract.
@@ -87,7 +87,7 @@ contract Tokenator is ERC20Burnable, Ownable {
 
         underlyingToken.safeTransfer(to, amount);
 
-        emit EmergencyWithdrawal(amount, to);
+        emit EmergencyWithdrawal(msg.sender, amount, to);
     }
 
     // owner may withdraw tokens accidentally sent to the contract that aren't the underlying token
@@ -101,7 +101,7 @@ contract Tokenator is ERC20Burnable, Ownable {
 
         token.safeTransfer(to, amount);
 
-        emit TokensRescued(token, amount, to);
+        emit TokensRescued(msg.sender, token, amount, to);
     }
 
     // duration period is complete
