@@ -135,7 +135,8 @@ contract Tokenator is ERC20Burnable, Ownable {
             (tokenatorAmount *
                 underlyingTokenPerTokenator() *
                 redeemablePercent()) /
-            PRECISION ** 2;
+            PRECISION /
+            PRECISION;
     }
 
     // courtesy view functions
