@@ -45,6 +45,7 @@ contract Tokenator is ERC20Burnable, Ownable {
         uint256 durationDays_
     ) ERC20(name_, symbol_) Ownable(msg.sender) {
         if (commencement_ < block.timestamp) revert CommencementPassed();
+        if (address(underlyingToken_) == address(0)) revert ZeroAddress();
 
         underlyingToken = underlyingToken_;
         commencement = commencement_;
