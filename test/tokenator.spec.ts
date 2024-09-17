@@ -4,7 +4,7 @@ import { loadFixture, time, mine } from '@nomicfoundation/hardhat-network-helper
 import { Signer } from 'ethers';
 import { getCurrentTime } from '../utils/utils';
 import { tokenatorFixture } from './fixtures';
-import { Tokenator, MockERC20 } from "../typechain-types";
+import { Tokenator, MockERC20, MockERC20__factory } from "../typechain-types";
 
 const NULL_ADDRESS = "0x0000000000000000000000000000000000000000"
 const TEN_MIL = "10000000000000000000000000";
@@ -258,9 +258,6 @@ describe('Tokenator specification', () => {
         await mine();
 
         // get all underlying out
-        const msg1 = "Ally:emergencyWithdraw:: to cannot be the 0x0 address";
-        const msg2 = "Ownable: caller is not the owner";
-
         await expect(tokenator.emergencyWithdraw(HALF_MIL, NULL_ADDRESS)).to.be.revertedWithCustomError(tokenator, 'ZeroAddress');
         await expect(tokenator.connect(other0).emergencyWithdraw(HALF_MIL, await other0.getAddress())).to.be.revertedWithCustomError(tokenator, 'OwnableUnauthorizedAccount');
 
@@ -278,5 +275,37 @@ describe('Tokenator specification', () => {
         expect(tokenatorBalance.toString()).to.eq(ONE_MIL);
         expect(claimable.toString()).to.eq("0");
         expect(uponCompletion.toString()).to.eq("0");
-    })
+    });
+
+    it('rescue tokens', async () => {
+        const now = await getCurrentTime();
+
+        // create a mock ERC-20 token
+        const mockTokenFactory = new MockERC20__factory(wallet);
+        const mockToken = await mockTokenFactory.deploy("MOCK", "MOCK", ethers.parseUnits('1000', 18));
+
+        // send the ERC-20 to the tokenator contract
+        await mockToken.transfer(await tokenator.getAddress(), ethers.parseUnits('1000', 18));
+
+        // cannot rescue tokens to the zero address
+        await expect(tokenator.rescueTokens(await mockToken.getAddress(), ethers.parseUnits('1000', 18), NULL_ADDRESS)).to.be.revertedWithCustomError(tokenator, 'ZeroAddress');
+
+        // cannot use rescueTokens to withdraw the underlying
+        await expect(tokenator.rescueTokens(await underlying.getAddress(), ethers.parseUnits('1000', 18), await other0.getAddress())).to.be.revertedWithCustomError(tokenator, 'CannotRescueUnderlyingToken');
+
+        // non-owner cannot call rescueTokens
+        await expect(tokenator.connect(other0).rescueTokens(await underlying.getAddress(), ethers.parseUnits('1000', 18), await other0.getAddress())).to.be.revertedWithCustomError(tokenator, 'OwnableUnauthorizedAccount');
+
+
+        // check balances before rescue
+        expect(await mockToken.balanceOf(await tokenator.getAddress())).to.eq(ethers.parseUnits('1000', 18));
+        expect(await mockToken.balanceOf(await wallet.getAddress())).to.eq(ethers.parseUnits('0', 18));
+
+        // owner can rescue tokens
+        await tokenator.connect(wallet).rescueTokens(await mockToken.getAddress(), ethers.parseUnits('1000', 18), await wallet.getAddress());
+
+        // check balances after rescue
+        expect(await mockToken.balanceOf(await tokenator.getAddress())).to.eq(ethers.parseUnits('00', 18));
+        expect(await mockToken.balanceOf(await wallet.getAddress())).to.eq(ethers.parseUnits('1000', 18));
+    });
 });
