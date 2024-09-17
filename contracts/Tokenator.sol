@@ -34,8 +34,7 @@ contract Tokenator is ERC20Burnable, Ownable {
     event EmergencyWithdrawal(address indexed caller, uint256 amount, address indexed to);
     event TokensRescued(address indexed caller, IERC20 token, uint256 amount, address indexed to);
 
-    /// @notice following the airdrop, the deployer is required to burn any surplus Tokenator
-    /// (because totalSupply() is used in calculations) and send underlying token to the contract.
+    /// @notice the deployer is responsible to send underlying token to the contract.
     constructor(
         string memory name_,
         string memory symbol_,
