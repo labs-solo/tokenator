@@ -5,8 +5,9 @@ import {ERC20, ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensio
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ITokenator} from "./interfaces/ITokenator.sol";
 
-contract Tokenator is ERC20Burnable, Ownable {
+contract Tokenator is ITokenator, ERC20Burnable, Ownable {
     using SafeERC20 for IERC20;
 
     IERC20 public underlyingToken;
@@ -14,27 +15,13 @@ contract Tokenator is ERC20Burnable, Ownable {
     uint256 public immutable commencement;
     uint256 public immutable durationSeconds;
 
-    error ZeroAddress();
-    error CommencementPassed();
-    error CommencementNotPassed();
-    error CannotRescueUnderlyingToken();
-
-    event Deployed(
-        address deployer,
-        IERC20 underlyingToken,
-        uint256 commencement,
-        uint256 durationDays
-    );
-    event ClaimUnderlyingToken(
-        address indexed user,
-        address indexed to,
-        uint256 tokenatorAmount,
-        uint256 underlyingTokenAmount
-    );
-    event EmergencyWithdrawal(address indexed caller, uint256 amount, address indexed to);
-    event TokensRescued(address indexed caller, IERC20 token, uint256 amount, address indexed to);
-
     /// @notice the deployer is responsible to send underlying token to the contract.
+    /// @param name_ token name
+    /// @param symbol_ token symbol
+    /// @param totalSupply_ token total supply
+    /// @param underlyingToken_ the token that tokenator can be redeemed for
+    /// @param commencement_ timestamp at which tokenator vesting begins
+    /// @param durationDays_ duration in days for tokenator to fully vest
     constructor(
         string memory name_,
         string memory symbol_,
@@ -60,7 +47,10 @@ contract Tokenator is ERC20Burnable, Ownable {
         );
     }
 
-    // redeem underlying token from this contract by burning tokenator
+    /// @notice allows user to claim underlying token from this contract by burning tokenator token
+    /// @param tokenatorAmount amount of tokenator token to burn
+    /// @param to address to receive the underlying token
+    /// @return underlyingTokenAmount amount of underlyingToken `to` address receives
     function claimUnderlyingToken(
         uint256 tokenatorAmount,
         address to
@@ -80,7 +70,9 @@ contract Tokenator is ERC20Burnable, Ownable {
         );
     }
 
-    // owner may withdraw underlying token in emergency situations
+    /// @notice owner may withdraw underlying token in emergency situations
+    /// @param amount underlying token amount to withdraw
+    /// @param to address to receive the underlying token
     function emergencyWithdraw(uint256 amount, address to) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
 
@@ -89,7 +81,11 @@ contract Tokenator is ERC20Burnable, Ownable {
         emit EmergencyWithdrawal(msg.sender, amount, to);
     }
 
-    // owner may withdraw tokens accidentally sent to the contract that aren't the underlying token
+    /// @notice owner may withdraw tokens accidentally sent to the contract
+    /// @notice this function can't be used to withdraw the underlying token
+    /// @param token the token to withdraw
+    /// @param amount the amount of the token to withdraw
+    /// @param to the address to receive the rescued token
     function rescueTokens(
         IERC20 token,
         uint256 amount,
@@ -103,30 +99,37 @@ contract Tokenator is ERC20Burnable, Ownable {
         emit TokensRescued(msg.sender, token, amount, to);
     }
 
-    // duration period is complete
+    /// @notice returns whether the duration period is complete
+    /// @return isComplete true if the duration is complete, otherwise false
     function complete() public view returns (bool isComplete) {
         isComplete = ageSeconds() >= durationSeconds;
     }
 
-    // seconds completed in full
+    /// @notice returns the number of seconds elapsed from the commencement time
+    /// @return elapsedSeconds seconds elapsed from the commencement time
     function ageSeconds() public view returns (uint256 elapsedSeconds) {
         if (block.timestamp <= commencement) return 0;
         elapsedSeconds = block.timestamp - commencement;
     }
 
-    // 1e18 = 1.00 = 100%
+    /// @notice returns the tokenator redeemable percent based on current time within duration
+    /// @notice scaled x18 => 1e18 = 1.00 = 100%
+    /// @return p18 redeemable percent x18
     function redeemablePercent() public view returns (uint256 p18) {
         if (complete()) return PRECISION;
         p18 = (ageSeconds() * PRECISION) / durationSeconds;
     }
 
-    // at completion, based on current underlying token balance and unredeemed tokenator token supply
-    // it is permissible to send more underlying token to this contract for proportional, time-based distribution
+    /// @notice returns the amount of underlying tokens redeemable per tokenator at the end of duration, scaled by x18
+    /// @notice it is permissible to send more underlying token to this contract for proportional, time-based distribution
+    /// @return p18 amount of underlying token redeemable per tokenator at end of duration, scaled by x18
     function underlyingTokenPerTokenator() public view returns (uint256 p18) {
         p18 = (underlyingTokenBalance() * PRECISION) / totalSupply();
     }
 
-    // present value, based on tokenator to redeem, value at completion and redeemable percent
+    /// @notice present value, based on tokenator to redeem, value at completion and redeemable percent
+    /// @param tokenatorAmount amount of tokenator token
+    /// @return underlyingTokenAmount amount of underlying token that can be redeemed for specified tokenator amount
     function underlyingTokenForTokenator(
         uint256 tokenatorAmount
     ) public view returns (uint256 underlyingTokenAmount) {
@@ -138,7 +141,8 @@ contract Tokenator is ERC20Burnable, Ownable {
             PRECISION;
     }
 
-    // courtesy view functions
+    /// @notice returns the amount of underlying token held by this contract
+    /// @return underlyingTokenBalance_ amount of underlying token held by this contract
     function underlyingTokenBalance()
         public
         view
@@ -147,6 +151,11 @@ contract Tokenator is ERC20Burnable, Ownable {
         underlyingTokenBalance_ = underlyingToken.balanceOf(address(this));
     }
 
+    /// @notice returns relevant info for the specified user address
+    /// @param user address of the user
+    /// @return tokenatorBalance amount of tokenator held by the specified user
+    /// @return claimable total amount of underlying the user could redeem now
+    /// @return uponCompletion total amount of underlying the user could redeem at end of duration
     function userBalances(
         address user
     )
