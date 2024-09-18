@@ -1,0 +1,15 @@
+{
+  "JUGModule": {
+    "name": "JUG",
+    "symbol": "JUG",
+    "totalSupply": "75000000n",
+    "underlyingToken": "0xFA205120907585D2c46214beB2f27Bc496e4235d",
+    "commencement": "1726804800",
+    "durationDays": "4"
+  },
+  "SIPModule": {
+    "name": "JUG",
+    "symbol": "JUG",
+    "totalSupply": "75000000n"
+  }
+}
