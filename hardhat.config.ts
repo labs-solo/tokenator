@@ -4,17 +4,29 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const BARTIO_RPC_URL = process.env.BARTIO_RPC_URL || "";
-const BARTIO_DEPLOYER_PRIVATE_KEY = process.env.BARTIO_DEPLOYER_PRIVATE_KEY || "";
-
 const config: HardhatUserConfig = {
   solidity: "0.8.24",
   networks: {
-    bartio: {
-      url: BARTIO_RPC_URL,
-      accounts: [BARTIO_DEPLOYER_PRIVATE_KEY],
+    berachainTestnet: {
+      url: process.env.BERACHAIN_TESTNET_RPC_URL || "",
+      accounts: [process.env.BERACHAIN_TESTNET_DEPLOYER_PRIVATE_KEY || ""],
     },
   },
+  etherscan: {
+    apiKey: {
+      berachainTestnet: "placeholder", // apiKey is not required, just set a placeholder
+    },
+    customChains: [
+      {
+        network: "berachainTestnet",
+        chainId: 80084,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan",
+          browserURL: "https://bartio.beratrail.io"
+        }
+      }
+    ]
+  }
 };
 
 export default config;

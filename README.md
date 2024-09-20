@@ -16,3 +16,28 @@ To run test
 ```
 npx hardhat tests
 ```
+
+
+## Deployment
+This repository uses Hardhat Ignition for contract deployment
+https://hardhat.org/ignition/docs/getting-started#overview
+
+To deploy SIP (an instantion of LiquidityToken) on Berachain bArtio testnet, run:
+```
+npx hardhat ignition deploy ignition/modules/SIP.ts --parameters ignition/parameters.json --network berachainTestnet --verify
+```
+
+To deploy MockAegisLP (an instantion of MockERC20) on Berachain bArtio testnet, run:
+```
+npx hardhat ignition deploy ignition/modules/MockAegisLP.ts --parameters ignition/parameters.json --network berachainTestnet --verify
+```
+
+To deploy JUG (an instantiation of Tokenator) on Berachain bArtio testnet, run:
+```
+npx hardhat ignition deploy ignition/modules/JUG.ts --parameters ignition/parameters.json --network berachainTestnet --verify
+```
+
+If any contract verifications fail, the following command can be ran to retry verification:
+```
+npx hardhat ignition verify chain-80084 --include-unrelated-contracts
+```
