@@ -1,38 +1,47 @@
-import chai, { expect } from 'chai'
-import { Contract, Wallet, providers } from 'ethers'
-import { solidity, deployContract } from 'ethereum-waffle'
-import { ethers, waffle, network } from 'hardhat'
+import { ethers } from 'hardhat';
+import {
+    LiquidityToken,
+    LiquidityToken__factory,
+    Tokenator,
+    Tokenator__factory,
+    MockERC20,
+    MockERC20__factory
+} from '../typechain-types';
+import { Mock } from 'node:test';
 
-import { Ally, ICHIV2, OneToken, AllySwap } from "../typechain/";
-
-chai.use(solidity)
-
-
-interface AllyFixture {
-  ally: Ally
-  ichi: ICHIV2
-  oneToken: OneToken
-  allySwap: AllySwap
+export interface TokenatorFixture {
+    liquidityToken: LiquidityToken;
+    underlyingToken: MockERC20;
+    tokenator: Tokenator;
 }
 
-export async function allyFixture(
-  [wallet]: Wallet[],
-  provider: providers.Web3Provider
-): Promise<AllyFixture> {
-  // deploy Ally
-  const { timestamp: now } = await provider.getBlock('latest')
+export async function tokenatorFixture(): Promise<TokenatorFixture> {
+    // Get the deployer signer
+    const [deployer] = await ethers.getSigners();
 
-  const oneTokenFactory = await ethers.getContractFactory('oneToken')
-  const oneToken = (await oneTokenFactory.deploy()) as OneToken
+    // Get current block timestamp
+    const block = await ethers.provider.getBlock('latest');
+    if (!block) {
+        throw new Error('Failed to fetch the latest block');
+    }
+    const now = block.timestamp;
 
-  const ichiFactory = await ethers.getContractFactory('ICHIV2')
-  const ichi = (await ichiFactory.deploy()) as ICHIV2
+    // Deploy liquidity token contract
+    const liquidityTokenFactory = new LiquidityToken__factory(deployer);
+    const liquidityToken = await liquidityTokenFactory.deploy("LT", "LT", ethers.parseUnits('75000000', 18));
+    await liquidityToken.waitForDeployment();
+    const liquidityTokenAddress = await liquidityToken.getAddress();
 
-  const allyFactory = await ethers.getContractFactory('Ally')
-  const ally = (await allyFactory.deploy(ichi.address, now + 60 * 60, 1095)) as Ally
+    // Deploy mock underlying token contract
+    const underlyingTokenFactory = new MockERC20__factory(deployer);
+    const underlyingToken = await underlyingTokenFactory.deploy("UNDER", "UNDER", ethers.parseUnits('10000000', 18));
+    await underlyingToken.waitForDeployment();
+    const mockUnderlyingTokenAddress = await underlyingToken.getAddress();
 
-  const allySwapFactory = await ethers.getContractFactory('AllySwap')
-  const allySwap = (await allySwapFactory.deploy(oneToken.address, ally.address, "2000000000000000000")) as AllySwap
+    // Deploy Tokenator contract
+    const tokenatorFactory = new Tokenator__factory(deployer);
+    const tokenator = await tokenatorFactory.deploy("TOKE", "TOKE", ethers.parseUnits('10000000', 18), mockUnderlyingTokenAddress, now + 60 * 60, 1095);
+    await tokenator.waitForDeployment();
 
-  return { ally, ichi, oneToken, allySwap }
+    return { liquidityToken, underlyingToken, tokenator };
 }

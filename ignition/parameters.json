@@ -1,0 +1,20 @@
+{
+  "JUGModule": {
+    "name": "JUG",
+    "symbol": "JUG",
+    "totalSupply": "1000000000000000000000000n",
+    "underlyingToken": "0x6c56C01861CBdb686d2e6616c20878855083e5e9",
+    "commencement": "1726869600",
+    "durationDays": "10"
+  },
+  "SIPModule": {
+    "name": "SIP",
+    "symbol": "SIP",
+    "totalSupply": "75000000000000000000000000n"
+  },
+  "MockAegisLPModule": {
+    "name": "AEGIS LP",
+    "symbol": "AEGIS LP",
+    "totalSupply": "100000000000000000000000000n"
+  }
+}

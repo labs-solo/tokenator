@@ -1,82 +1,32 @@
-import "hardhat-typechain";
-import "solidity-coverage";
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-waffle";
-import "hardhat-deploy";
-require("hardhat-gas-reporter");
-require("dotenv").config();
-const mnemonic =
-  process.env.DEV_MNEMONIC ||
-  "test test test test test test test test test test test junk";
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from "dotenv";
 
-export default {
-  gasReporter: {
-    enabled: process.env.REPORT_GAS ? true : false,
-    currency: "USD",
-    gasPrice: 120,
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-    excludeContracts: [],
-  },
+dotenv.config();
+
+const config: HardhatUserConfig = {
+  solidity: "0.8.24",
   networks: {
-    hardhat: {
-      chainId: parseInt(process.env.CHAIN_ID!) || 1,
-      live: false,
-      saveDeployments: true,
-      allowUnlimitedContractSize: false,
-      tags: ["test", "local", "ethereum", "polygon", "kovan"],
-      accounts: {
-        mnemonic,
-      },
+    berachainTestnet: {
+      url: process.env.BERACHAIN_TESTNET_RPC_URL || "",
+      accounts: [process.env.BERACHAIN_TESTNET_DEPLOYER_PRIVATE_KEY || ""],
     },
-    mainnet: {
-      url: "https://mainnet.infura.io/v3/" + process.env.INFURA_ID,
-      accounts: [`0x${process.env.ALLY_DEPLOYER_MAINNET}`],
-      /*accounts: {
-        mnemonic,
-      },*/
-      //url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.MAINNET_ALCHEMY_API_KEY}`,
-      //accounts: [`0x${process.env.ICHI_LAUNCH}`],
-      chainId: 1,
-      saveDeployments: true,
-    },
-    kovan: {
-      url: "https://kovan.infura.io/v3/" + process.env.INFURA_ID,
-      accounts: [`0x${process.env.ALLY_DEPLOYER_KOVAN}`],
-      chainId: 42,
-      saveDeployments: true,
-    },
-  },
-  namedAccounts: {
-    deployer: {
-      default: 0,
-    },
-  },
-  watcher: {
-    compilation: {
-      tasks: ["compile"],
-    },
-  },
-  solidity: {
-    compilers: [
-      {
-        version: "0.7.6",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
-    ],
   },
   etherscan: {
     apiKey: {
-      mainnet: process.env.ETHERSCAN_API_KEY,
-      kovan: process.env.ETHERSCAN_API_KEY,
-    }
-  },
-  mocha: {
-    timeout: 2000000,
-  },
+      berachainTestnet: "placeholder", // apiKey is not required, just set a placeholder
+    },
+    customChains: [
+      {
+        network: "berachainTestnet",
+        chainId: 80084,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan",
+          browserURL: "https://bartio.beratrail.io"
+        }
+      }
+    ]
+  }
 };
+
+export default config;
