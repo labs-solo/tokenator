@@ -55,8 +55,8 @@ interface ITokenator {
     function rescueTokens(IERC20 token, uint256 amount, address to) external;
 
     /// @notice returns whether the duration period is complete
-    /// @return isComplete true if the duration is complete, otherwise false
-    function complete() external view returns (bool isComplete);
+    /// @return true if the duration is complete, otherwise false
+    function complete() external view returns (bool);
 
     /// @notice returns the number of seconds elapsed from the commencement time
     /// @return elapsedSeconds seconds elapsed from the commencement time

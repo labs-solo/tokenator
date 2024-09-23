@@ -100,9 +100,9 @@ contract Tokenator is ITokenator, ERC20Burnable, Ownable {
     }
 
     /// @notice returns whether the duration period is complete
-    /// @return isComplete true if the duration is complete, otherwise false
-    function complete() public view returns (bool isComplete) {
-        isComplete = ageSeconds() >= durationSeconds;
+    /// @return true if the duration is complete, otherwise false
+    function complete() public view returns (bool) {
+        return ageSeconds() >= durationSeconds;
     }
 
     /// @notice returns the number of seconds elapsed from the commencement time
