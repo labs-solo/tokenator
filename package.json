@@ -1,5 +1,5 @@
 {
-  "name": "tokenator",
+  "name": "@labs-solo/tokenator",
   "version": "1.0.0",
   "description": "Tokenator contract",
   "directories": {
